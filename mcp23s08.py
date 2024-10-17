@@ -14,11 +14,16 @@ class MCP23S08_Pin:
         self.pull(pull)
         self.value(value)
 
-    def value(self, x=None):
-        if x is None:
-            return bool(self._bus._read(self._address, MCP23S08.GPIO) & self._bit)
+    def _do(self, x, register, blank, on_low, on_high):
+        if x == blank:
+            return on_high if bool(self._bus._read(self._address, register) & self._bit) else on_low
+        elif x in [on_low, on_high]:
+            self._bus._write(self._address, register, self._mask, self._bit if x == on_high else 0)
         else:
-            self._bus._write(self._address, MCP23S08.GPIO, self._mask, self._bit if bool(x) else 0)
+            raise ValueError
+        
+    def value(self, x=None):
+        return self._do(x if x is None else bool(x), MCP23S08.GPIO, None, False, True)
 
     def __call__(self, x=None):
         return self.value(x)
@@ -36,20 +41,10 @@ class MCP23S08_Pin:
         self.value(True)
 
     def mode(self, x=-1):
-        if x == -1:
-            return self.IN if bool(self._bus._read(self._address, MCP23S08.IODIR) & self._bit) else self.OUT
-        elif x in [self.IN, self.OUT]:
-            self._bus._write(self._address, MCP23S08.IODIR, self._mask, self._bit if x == self.IN else 0)
-        else:
-            raise ValueError
+        return self._do(x, MCP23S08.IODIR, -1, self.OUT, self.IN)
         
     def pull(self, x=-1):
-        if x == -1:
-            return self.PULL_UP if bool(self._bus._read(self._address, MCP23S08.GPPU) & self._bit) else None
-        elif x in [self.PULL_UP, None]:
-            self._bus._write(self._address, MCP23S08.GPPU, self._mask, self._bit if x == self.PULL_UP else 0)
-        else:
-            raise ValueError       
+        return self._do(x, MCP23S08.GPPU, -1, None, self.PULL_UP)      
 
     def toggle(self):
         self.value(not self.value())
