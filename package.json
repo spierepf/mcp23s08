@@ -1,0 +1,6 @@
+{
+  "urls": [
+    ["mcp23s08.py", "github:spierepf/mcp23s08/mcp23s08.py"]
+  ],
+  "version": "0.1"
+}
